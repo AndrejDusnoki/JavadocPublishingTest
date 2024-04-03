@@ -1,0 +1,89 @@
+plugins {
+    alias(libs.plugins.androidLibrary)
+    alias(libs.plugins.jetbrainsKotlinAndroid)
+    id 'maven-publish'
+}
+
+android {
+    namespace = "com.mylibrary"
+    compileSdk = 34
+
+    defaultConfig {
+        minSdk = 29
+
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles("consumer-rules.pro")
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled = false
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+        }
+    }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+}
+
+dependencies {
+
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.appcompat)
+    implementation(libs.material)
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.espresso.core)
+}
+sourceSets {
+    main {
+        java {
+            srcDir 'src/main/java'
+        }
+        resources {
+            srcDir 'src/../lib'
+        }
+    }
+}
+tasks.register('generateDocumentation', Jar) {
+    group = 'documentation'
+    archiveClassifier = 'sources'
+    exclude("src/main/java/com/mylibrary/Internal.kt")
+    from 'src/main/java'
+}
+// build a jar with source files
+tasks.register('jar', Jar) {
+    group = 'documentation'
+    description = 'Generate documentation.'
+    archiveVersion = '1.0.0'
+    archiveFileName = 'sources.jar'
+    from 'build/docs/javadoc'
+}
+artifacts {
+    archives jar
+}
+publishing {
+    repositories {
+        maven {
+            // Local Maven repository path
+            url = uri("/Users/a.dusnoki/AndroidStudioProjects/LIBS")
+        }
+    }
+
+    publications {
+        aar(MavenPublication) {
+            groupId = 'com.example'
+            artifactId = 'my-library'
+            version = '1.0.0'
+            artifact("$buildDir/outputs/aar/mylibrary-debug.aar")
+            artifact(tasks.jar.outputs.getFiles().singleFile)
+        }
+    }
+}
